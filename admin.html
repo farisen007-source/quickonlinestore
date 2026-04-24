@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Manage Products</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: 'Poppins', system-ui; margin: 0; background: #f4f4f4; padding: 20px; }
+        header { background: #0670f3; color: white; padding: 15px; text-align: center; margin: -20px -20px 20px -20px; border-bottom: 3px solid #e4dace; font-weight: bold; }
+        .container { max-width: 600px; margin: auto; margin-top:5% ; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
+        button { background: #1a73e8; color: white; border: none; cursor: pointer; font-weight: bold; }
+        .product-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
+        .product-item img { width: 50px; height: 50px; object-fit: contain; margin-right: 10px; }
+        .product-info { flex-grow: 1; font-size: 14px; }
+        .del-btn { background: #d93025; width: 150px; height: 38px; padding: 5px 10px; font-size: 12px; margin-right: -59px;}
+        #admin-content { display: none; } 
+        #login-box { max-width: 300px; margin: 50px auto; }
+    </style>
+</head>
+<body>
+
+    <header><h1>Admin Panel</h1></header>
+
+    <div id="login-box" class="container">
+        <h2 style="text-align: center;">Login</h2>
+        <input type="text" id="user" placeholder="Username">
+        <input type="password" id="pass" placeholder="Password">
+        <button onclick="checkLogin()">Login</button>
+    </div>
+
+    <div id="admin-content">
+        <div class="container">
+            <button onclick="logout()" style="background:#666; width:auto; float:right; padding:5px 10px; font-size:12px;">Logout</button>
+            <div style="clear:both;"></div>
+            <h2>Add New Product</h2>
+            <input type="text" id="title" placeholder="Product Title">
+            <input type="text" id="price" placeholder="Price">
+            <input type="text" id="img" placeholder="Image URL">
+            <input type="text" id="link" placeholder="Affiliate Link">
+            <button onclick="addProduct()" style="background: #28a745;">Add Product</button>
+          
+            
+        </div>
+
+        <div class="container" style="margin-top: 20px;">
+            <div class="button" style="width: 50%; float: right; margin-right: -23%;">
+                <a href="user.html"><button style="background: #0964ec; color: #eee; width: 50%; align-items: end;">Go Site</button></a>
+
+            </div>
+           <div class="test" style="width: 90%; margin-top: -2%;">
+             <h2>Manage Products</h2>
+            
+            <div id="manage-list">Loading products...</div>
+                
+            </div>
+           
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAERwmX5QeBeX7wTSPDUqMkR628WD9MJLk",
+            databaseURL: "https://quickstore-online-default-rtdb.firebaseio.com",
+            projectId: "quickstore-online",
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // പേജ് ലോഡ് ആകുമ്പോൾ ലോഗിൻ സ്റ്റാറ്റസ് പരിശോധിക്കുന്നു
+        window.onload = function() {
+            if (sessionStorage.getItem("isLoggedIn") === "true") {
+                showAdmin();
+            }
+        };
+
+        function checkLogin() {
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+            if(u === "quickstore" && p === "quick9778") { 
+                sessionStorage.setItem("isLoggedIn", "true");
+                showAdmin();
+            } else { alert("Wrong Credentials!"); }
+        }
+
+        function showAdmin() {
+            document.getElementById('login-box').style.display = "none";
+            document.getElementById('admin-content').style.display = "block";
+            loadProductsForManagement();
+        }
+
+        function logout() {
+            sessionStorage.removeItem("isLoggedIn");
+            location.reload();
+        }
+
+        function addProduct() {
+            const title = document.getElementById('title').value;
+            const price = document.getElementById('price').value;
+            const img = document.getElementById('img').value;
+            const link = document.getElementById('link').value;
+            if(title && price && img && link) {
+                database.ref('products').push({ title, price, img, link })
+                .then(() => { alert("Added!"); location.reload(); });
+            }
+        }
+
+        function loadProductsForManagement() {
+            const listDiv = document.getElementById('manage-list');
+            database.ref('products').on('value', (snapshot) => {
+                listDiv.innerHTML = '';
+                snapshot.forEach((childSnapshot) => {
+                    const key = childSnapshot.key;
+                    const item = childSnapshot.val();
+                    listDiv.innerHTML += `
+                        <div class="product-item">
+                            <img src="${item.img}">
+                            <div class="product-info">
+                                <strong>${item.title}</strong><br>₹${item.price}
+                            </div>
+                            <button class="del-btn" onclick="deleteProduct('${key}')">Delete</button>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        function deleteProduct(key) {
+            if(confirm("You Remove This Product?")) {
+                database.ref('products/' + key).remove()
+                .then(() => { alert("Deleted!"); });
+            }
+        }
+    </script>
+</body>
+</html>
