@@ -16,14 +16,13 @@
             padding: 0; 
         }
 
-        /* New Header Design */
+        /* Header Design */
         header {
             background: #0572ff;
-            color: rgb(0, 0, 0);
+            color: white;
             padding: 15px 10px;
-            text-size: 50px ;
             text-align: center;
-            position: sticky; /* മുകളിൽ ഉറച്ചു നിൽക്കാൻ */
+            position: sticky; 
             top: 0;
             z-index: 1000;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -38,19 +37,18 @@
         }
 
         .logo-highlight {
-            color: #ffffff; /* മഞ്ഞ നിറത്തിലുള്ള ഹൈലൈറ്റ് */
+            color: #ffffff;
         }
 
         header p {
             margin: 5px 0 0;
             font-size: 12px;
-            opacity: 0.8;
+            opacity: 0.9;
         }
 
         /* Product Grid */
         .content-area {
             padding: 15px;
-            
         }
 
         .grid { 
@@ -59,12 +57,11 @@
             gap: 12px; 
             max-width: 800px; 
             margin: auto;
-            text-align: center;
         }
 
         .card { 
             background: white;
-            margin-top: 25%; 
+            margin-top: 10px; 
             padding: 12px; 
             border-radius: 12px; 
             text-align: center; 
@@ -73,10 +70,6 @@
             flex-direction: column;
             justify-content: space-between;
             transition: transform 0.2s;
-        }
-
-        .card:active {
-            transform: scale(0.98); /* ക്ലിക്ക് ചെയ്യുമ്പോൾ ഉള്ള ഇഫക്റ്റ് */
         }
 
         .card img { 
@@ -93,7 +86,7 @@
             height: 40px;
             overflow: hidden;
             display: -webkit-box;
-           
+            -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
         }
 
@@ -109,14 +102,26 @@
             background: linear-gradient(to bottom, #0871fa, #0b84f5);
             padding: 10px; 
             text-decoration: none; 
-            color: #111; 
+            color: white; 
             font-weight: bold; 
             border-radius: 7px; 
             font-size: 13px;
-            border: 1px solid #111111;
+            border: 1px solid #0559c9;
         }
 
-        /* Loading Text */
+        /* Out of Stock Button Style */
+        .out-btn {
+            background: #ccc !important;
+            color: #666 !important;
+            border: 1px solid #999 !important;
+            cursor: not-allowed;
+            pointer-events: none; /* ക്ലിക്ക് ചെയ്യാൻ പറ്റില്ല */
+        }
+
+        .card-out {
+            opacity: 0.6;
+        }
+
         #product-list {
             text-align: center;
             color: #666;
@@ -136,7 +141,6 @@
     </div>
 
     <script>
-        
         const firebaseConfig = {
             apiKey: "AIzaSyAERwmX5QeBeX7wTSPDUqMkR628WD9MJLk",
             databaseURL: "https://quickstore-online-default-rtdb.firebaseio.com",
@@ -150,14 +154,23 @@
             container.innerHTML = '';
             snapshot.forEach((childSnapshot) => {
                 const item = childSnapshot.val();
+                
+                // Out of Stock ആണോ എന്ന് ചെക്ക് ചെയ്യുന്നു
+                const isOut = item.status === "out";
+                const btnText = isOut ? "Out of Stock" : "Buy Now";
+                const btnClass = isOut ? "btn out-btn" : "btn";
+                const cardClass = isOut ? "card card-out" : "card";
+
                 container.innerHTML += `
-                    <div class="card">
+                    <div class="${cardClass}">
                         <img src="${item.img}" alt="${item.title}">
                         <div>
                             <h3>${item.title}</h3>
                             <p class="price">₹${item.price}</p>
                         </div>
-                        <a href="${item.link}" target="_blank" class="btn">Buy Now</a>
+                        <a href="${isOut ? '#' : item.link}" target="${isOut ? '' : '_blank'}" class="${btnClass}">
+                            ${btnText}
+                        </a>
                     </div>
                 `;
             });
@@ -165,4 +178,3 @@
     </script>
 </body>
 </html>
- 
