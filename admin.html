@@ -19,12 +19,18 @@
         input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
         label { font-size: 13px; color: #666; font-weight: bold; display: block; margin-top: 10px; }
         button { background: #1a73e8; color: white; border: none; cursor: pointer; font-weight: bold; }
+        
         .product-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
         .product-item img { width: 50px; height: 50px; object-fit: contain; margin-right: 10px; }
         .product-info { flex-grow: 1; font-size: 14px; }
+        
+        /* ക്ലിക്ക് കൗണ്ട് സ്റ്റൈൽ */
+        .click-badge { color: #0670f3; font-weight: bold; font-size: 12px; display: inline-block; margin-top: 2px; }
+
         .stock-btn { background: #ff9800; width: auto; padding: 5px 10px; font-size: 11px; margin-right: 5px; border-radius: 4px; }
         .in-stock-btn { background: #28a745; width: auto; padding: 5px 10px; font-size: 11px; margin-right: 5px; border-radius: 4px; }
         .del-btn { background: #d93025; width: auto; padding: 5px 10px; font-size: 11px; border-radius: 4px; }
+        
         #admin-content { display: none; } 
         #login-box { max-width: 300px; margin: 50px auto; }
         .out-of-stock-item { opacity: 0.5; background: #fff5f5; }
@@ -99,10 +105,9 @@
             document.getElementById('login-box').style.display = "none";
             document.getElementById('admin-content').style.display = "block";
             loadProductsForManagement();
-            loadVisitCount(); // വിസിറ്റർ കൗണ്ട് ലോഡ് ചെയ്യുന്നു
+            loadVisitCount();
         }
 
-        // വിസിറ്റർ കൗണ്ട് ഡിസ്പ്ലേ ചെയ്യാൻ
         function loadVisitCount() {
             database.ref('visits').on('value', (snapshot) => {
                 const count = snapshot.val() || 0;
@@ -129,7 +134,12 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     database.ref('products').push({
-                        title: title, price: price, img: e.target.result, link: link, status: "in_stock"
+                        title: title, 
+                        price: price, 
+                        img: e.target.result, 
+                        link: link, 
+                        status: "in_stock",
+                        clicks: 0 // പുതിയ പ്രോഡക്റ്റിന് തുടക്കത്തിൽ 0 ക്ലിക്ക്
                     }).then(() => { alert("Product Added!"); location.reload(); });
                 };
                 reader.readAsDataURL(file);
@@ -144,11 +154,17 @@
                     const key = childSnapshot.key;
                     const item = childSnapshot.val();
                     const isOut = item.status === "out";
+                    const clicks = item.clicks || 0; // ക്ലിക്ക് ഡാറ്റ എടുക്കുന്നു
+
                     listDiv.innerHTML += `
                         <div class="product-item ${isOut ? 'out-of-stock-item' : ''}">
                             <img src="${item.img}">
-                            <div class="product-info"><strong>${item.title}</strong><br>₹${item.price} ${isOut ? '<span style="color:red; font-weight:bold;">(Out)</span>' : ''}</div>
-                            <div style="display:flex;">
+                            <div class="product-info">
+                                <strong>${item.title}</strong><br>
+                                <span class="click-badge">Clicks: ${clicks}</span><br>
+                                ₹${item.price} ${isOut ? '<span style="color:red; font-weight:bold;">(Out)</span>' : ''}
+                            </div>
+                            <div style="display:flex; flex-direction: column; gap: 5px;">
                                 <button class="${isOut ? 'in-stock-btn' : 'stock-btn'}" onclick="toggleStock('${key}', '${item.status}')">${isOut ? 'In Stock' : 'Out Stock'}</button>
                                 <button class="del-btn" onclick="deleteProduct('${key}')">Delete</button>
                             </div>
