@@ -60,8 +60,10 @@
             <h2>Add New Product</h2>
             <input type="text" id="title" placeholder="Product Title">
             <input type="text" id="price" placeholder="Price">
-            <label>Select Product Image (Gallery)</label>
-            <input type="file" id="imgFile" accept="image/*">
+            
+            <label>Product Image URL (ImgBB Direct Link)</label>
+            <input type="text" id="imgURL" placeholder="Paste image link here">
+            
             <input type="text" id="link" placeholder="Affiliate Link">
             <button id="addBtn" onclick="addProduct()" style="background: #28a745;">Add Product</button>
         </div>
@@ -120,30 +122,36 @@
             location.reload();
         }
 
+        // പ്രോഡക്റ്റ് ആഡ് ചെയ്യുന്ന ഫങ്ക്ഷൻ (Link ഉപയോഗിക്കുന്നത്)
         function addProduct() {
             const title = document.getElementById('title').value;
             const price = document.getElementById('price').value;
             const link = document.getElementById('link').value;
-            const fileInput = document.getElementById('imgFile');
-            const file = fileInput.files[0];
+            const imgURL = document.getElementById('imgURL').value;
             const btn = document.getElementById('addBtn');
 
-            if(title && price && link && file) {
+            if(title && price && link && imgURL) {
                 btn.disabled = true;
-                btn.innerText = "Uploading...";
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    database.ref('products').push({
-                        title: title, 
-                        price: price, 
-                        img: e.target.result, 
-                        link: link, 
-                        status: "in_stock",
-                        clicks: 0 // പുതിയ പ്രോഡക്റ്റിന് തുടക്കത്തിൽ 0 ക്ലിക്ക്
-                    }).then(() => { alert("Product Added!"); location.reload(); });
-                };
-                reader.readAsDataURL(file);
-            } else { alert("Please fill all fields!"); }
+                btn.innerText = "Adding...";
+                
+                database.ref('products').push({
+                    title: title, 
+                    price: price, 
+                    img: imgURL, // ലിങ്ക് സേവ് ചെയ്യുന്നു
+                    link: link, 
+                    status: "in_stock",
+                    clicks: 0
+                }).then(() => { 
+                    alert("Product Added!"); 
+                    location.reload(); 
+                }).catch((error) => {
+                    alert("Error: " + error.message);
+                    btn.disabled = false;
+                    btn.innerText = "Add Product";
+                });
+            } else { 
+                alert("Please fill all fields and paste image link!"); 
+            }
         }
 
         function loadProductsForManagement() {
@@ -154,7 +162,7 @@
                     const key = childSnapshot.key;
                     const item = childSnapshot.val();
                     const isOut = item.status === "out";
-                    const clicks = item.clicks || 0; // ക്ലിക്ക് ഡാറ്റ എടുക്കുന്നു
+                    const clicks = item.clicks || 0;
 
                     listDiv.innerHTML += `
                         <div class="product-item ${isOut ? 'out-of-stock-item' : ''}">
